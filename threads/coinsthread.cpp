@@ -4,34 +4,24 @@
 #include <pthread.h>
 #include <opencv2/opencv.hpp>
 
-#define N 3
-#define M 3
 #define TAMANHO 10
+#define NUM_THREADS 2
+
+float Gx[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+float Gy[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+float G[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 using namespace std;
 
-int buffer[N][TAMANHO];
+void *GdeX( *image){
 
-int main (int argc, char* argv[ ]) {
-	int i, j;
-    /*Definindo imagem original*/
-    cv::Mat image;
-    image = cv::imread("coins.png", cv::IMREAD_GRAYSCALE);
-	pthread_t tid[N];
-
-    float Gx[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-    float Gy[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-    float G[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-
-    /*
-        Calculando as informações de bordas
-    */ 
-        for (i=1; i<M-2; i++){
+    int i, j;
+    for (i=1; i<M-2; i++){
             for (j=1; j<N-2; j++){
 
                 /*Cálculo de Gx*/
-                Gx[i, j] = (image(i+1, j-1) + image[i+1, j] + image[i+1, j+1]) - (image[i-1, j-1] + image[i-1, j] + image[i-1, j+1]);
+                Gx[i, j] = (image.at<uchar>(i+1, j-1) +  image.at<uchar>(i+1, j) +  image.at<uchar>(i+1, j+1)) - (image.at<uchar>(i-1, j-1) +  image.at<uchar>(i-1, j) 
+                +  image.at<uchar>(i-1, j+1));
 
                 /*Saturando*/
                 if(Gx[i, j] < 0){
@@ -40,9 +30,18 @@ int main (int argc, char* argv[ ]) {
                 if(Gx[i, j] > 255){
                     Gx[i, j] = 255;
                 }
+            }
+        }
+} 
 
+void *GdeY(cv::Mat *image){
+
+    int i, j;
+    for (i=1; i<M-2; i++){
+            for (j=1; j<N-2; j++){
                 /*Cálculo de Gy*/
-                Gy[i, j] = (image[i-1, j+1] + image[i, j+1] + image[i+1, j+1]) - (image[i-1, j-1] + image[i, j-1] + image[i+1, j-1]);
+                Gy[i, j] = (image.at<uchar>(i-1, j+1) +  image.at<uchar>(i, j+1) +  image.at<uchar>(i+1, j+1)) - (image.at<uchar>(i-1, j-1) +  image.at<uchar>(i, j-1) 
+                +  image.at<uchar>(i+1, j-1));
 
                 /*Saturando*/
                 if(Gy[i, j] < 0){
@@ -54,6 +53,43 @@ int main (int argc, char* argv[ ]) {
 
             }
         }
+
+
+} 
+
+
+
+int main (int argc, char* argv[ ]) {
+	int i, j;
+    /*Definindo imagem original*/
+    cv::Mat image;
+    image = cv::imread("coins.png", cv::IMREAD_GRAYSCALE);
+	pthread_t thread_id[NUM_THREADS];
+    int thread1, thread2;
+
+    /* criar threads */
+    if (pthread_create (&thread_id[0], NULL, GdeX, (void*)&image) {
+        printf("Erro na criacao da thread\n");
+        exit(1);
+    }
+    else{
+        printf("Criada a thread %d\n", i);
+    }
+
+    if (pthread_create (&thread_id[1], NULL, GdeY, (void*)&image) {
+        printf("Erro na criacao da thread\n");
+        exit(1);
+    }
+    else{
+        printf("Criada a thread %d\n", i);        
+    }
+
+    /*-------------*/
+    for ( i = 0; i < NUM_THREADS; i++ ){			/* sincronizar threads */
+		pthread_join(thread_id[i], NULL);
+	}
+
+    printf("Terminaram todas as threads!\n");
     
     /*Gerando imagem de saída...*/ 
     for (i=0; i<M-1; i++){
@@ -61,34 +97,12 @@ int main (int argc, char* argv[ ]) {
             G[i, j] = Gx[i, j] + Gy[i, j];
             if (G[i, j] > 255)
                 G[i, j] = 255;
-        }
-        
+        }  
     }
-    
+    cv::namedWindow("Imagem trocada", cv::WINDOW_AUTOSIZE);
+    cv::imshow("Imagem trocada", trocaquadrante);
+    cv::waitKey();
 
-	
-	for ( i = 0; i < N; i++ ){		/* iniciar matriz */
-		for ( j = 0; j < TAMANHO-1; j++)
-			buffer[i][j] = rand()%10;
-	}
-	
-	for ( i = 0; i < N; i++){		/* criar threads */
-		if ( pthread_create (&tid[i], 0, soma_linha, (void *) &(buffer[i])) != 0) {
-			printf("Erro na criacao da thread\n");
-			exit(1);
-		}
-		else
-			printf("Criada a thread %d\n", i);
-	}
-	for ( i = 0; i < N; i++ ){			/* sincronizar threads */
-		pthread_join(tid[i], NULL);
-	}
-	printf("Terminaram todas as threads!\n");
 
-	for ( i = 0; i < N; i++ ) {					/* mostrar saida do programa */
-		for ( j = 0; j < TAMANHO; j++)
-			printf (" %3d ", buffer[i][j]);
-		printf("linha %d \n", i);
-	}
 	exit(0);
 }
