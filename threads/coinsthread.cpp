@@ -7,6 +7,9 @@
 #define TAMANHO 10
 #define NUM_THREADS 2
 
+// NÃO ESTÁ SENDO USADO
+
+
 float Gx[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 float Gy[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 float G[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};

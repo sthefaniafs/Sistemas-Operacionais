@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
 
+// NÃO ESTÁ SENDO USADO
+
 // Estrutura para passar argumentos para as threads
 struct ThreadArgs {
     cv::Mat* image;
