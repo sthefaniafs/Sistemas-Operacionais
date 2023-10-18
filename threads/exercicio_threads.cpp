@@ -154,8 +154,8 @@ int main() {
     fprintf(output_file, "P2\n%d %d\n255\n", coluna, linha);
 
     // Escrever os valores de pixel da imagem resultante
-    for (int i = 0; i < linha -1 ; i++) {
-        for (int j = 0; j < coluna - 1; j++) {
+    for (int i = 0; i < linha; i++) {
+        for (int j = 0; j < coluna; j++) {
             fprintf(output_file, "%d ", G[i][j]);
         }
         fprintf(output_file, "\n");
