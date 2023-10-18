@@ -10,19 +10,19 @@
 struct ThreadArgs {
     int** image;  // Matriz da imagem em nível de cinza
     int** result;  // Matriz do resultado (Gx ou Gy)
-    int width;  // Largura da imagem
-    int height;  // Altura da imagem
+    int coluna;  // Largura da imagem
+    int linha;  // Altura da imagem
 };
 
 void *GdeX(void *arg) {
     struct ThreadArgs *args = (struct ThreadArgs *)arg;
     int** image = args->image;
     int** result = args->result;
-    int width = args->width;
-    int height = args->height;
+    int coluna = args->coluna;
+    int linha = args->linha;
 
-    for (int i = 1; i < height - 2; i++) {
-        for (int j = 1; j < width - 2; j++) {
+    for (int i = 1; i < linha - 2; i++) {
+        for (int j = 1; j < coluna - 2; j++) {
             // Cálculo de Gx
             result[i][j] = (image[i + 1][j - 1] + image[i + 1][j] + image[i + 1][j + 1]) - (image[i - 1][j - 1] + image[i - 1][j] + image[i - 1][j + 1]);
 
@@ -43,11 +43,11 @@ void *GdeY(void *arg) {
     struct ThreadArgs *args = (struct ThreadArgs *)arg;
     int** image = args->image;
     int** result = args->result;
-    int width = args->width;
-    int height = args->height;
+    int coluna = args->coluna;
+    int linha = args->linha;
 
-    for (int i = 1; i < height - 2; i++) {
-        for (int j = 1; j < width - 2; j++) {
+    for (int i = 1; i < linha - 2; i++) {
+        for (int j = 1; j < coluna - 2; j++) {
             // Cálculo de Gy
             result[i][j] = (image[i - 1][j + 1] + image[i][j + 1] + image[i + 1][j + 1]) - (image[i - 1][j - 1] + image[i][j - 1] + image[i + 1][j - 1]);
 
@@ -75,17 +75,17 @@ int main() {
     // Leitura do cabeçalho da imagem PGM
     char magic[3];
     char line[1024];
-    int width, height, maxval;
+    int coluna, linha, maxval;
     //guarda a primeira info do arquivo: P2
     fscanf(file, "%s\n", magic);
     //guarda o comentário
     fscanf(file, "%[^\n]\n",line);
     //guarda linhas, colunas e intensidade
-    fscanf(file, "%d %d %d", &width, &height, &maxval);
+    fscanf(file, "%d %d %d", &coluna, &linha, &maxval);
 
     printf("%s\n", magic);
     printf("%s\n", line);
-    printf("tam imagem: %d x %d \n", width, height);
+    printf("tam imagem: %d x %d \n", coluna, linha);
 
     if (magic[0] != 'P' || magic[1] != '2') {
         printf("O arquivo não está no formato PGM P2.\n");
@@ -94,18 +94,18 @@ int main() {
     }
 
     // Alocação de memória para as matrizes de imagem e resultado (Gx e Gy)
-    int** image = (int**)malloc(height * sizeof(int*));
-    int** Gx = (int**)malloc(height * sizeof(int*));
-    int** Gy = (int**)malloc(height * sizeof(int*));
-    for (int i = 0; i < height; i++) {
-        image[i] = (int*)malloc(width * sizeof(int));
-        Gx[i] = (int*)malloc(width * sizeof(int));
-        Gy[i] = (int*)malloc(width * sizeof(int));
+    int** image = (int**)malloc(linha * sizeof(int*));
+    int** Gx = (int**)malloc(linha * sizeof(int*));
+    int** Gy = (int**)malloc(linha * sizeof(int*));
+    for (int i = 0; i < linha; i++) {
+        image[i] = (int*)malloc(coluna * sizeof(int));
+        Gx[i] = (int*)malloc(coluna * sizeof(int));
+        Gy[i] = (int*)malloc(coluna * sizeof(int));
     }
 
     // Leitura dos valores dos pixels da imagem
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
+    for (int i = 0; i < linha; i++) {
+        for (int j = 0; j < coluna; j++) {
             fscanf(file, "%d", &image[i][j]);
         }
     }
@@ -114,8 +114,8 @@ int main() {
     fclose(file);
 
     // Definição da estrutura de argumentos para as threads Gx e Gy
-    struct ThreadArgs gx_args = {image, Gx, width, height};
-    struct ThreadArgs gy_args = {image, Gy, width, height};
+    struct ThreadArgs gx_args = {image, Gx, coluna, linha};
+    struct ThreadArgs gy_args = {image, Gy, coluna, linha};
 
     // Criação das threads para calcular Gx e Gy
     pthread_t thread_gx, thread_gy;
@@ -128,13 +128,13 @@ int main() {
     pthread_join(thread_gy, NULL);
 
     // Cálculo da imagem de saída G
-    int** G = (int**)malloc(height * sizeof(int*));
-    for (int i = 0; i < height; i++) {
-        G[i] = (int*)malloc(width * sizeof(int));
+    int** G = (int**)malloc(linha * sizeof(int*));
+    for (int i = 0; i < linha; i++) {
+        G[i] = (int*)malloc(coluna * sizeof(int));
     }
 
-    for (int i = 0; i < height - 1; i++) {
-        for (int j = 0; j < width - 1; j++) {
+    for (int i = 0; i < linha - 1; i++) {
+        for (int j = 0; j < coluna - 1; j++) {
             G[i][j] = Gx[i][j] + Gy[i][j];
             if (G[i][j] > 255) {
                 G[i][j] = 255;
@@ -151,11 +151,11 @@ int main() {
     }
 
     // Escrever o cabeçalho no arquivo
-    fprintf(output_file, "P2\n%d %d\n255\n", width, height);
+    fprintf(output_file, "P2\n%d %d\n255\n", coluna, linha);
 
     // Escrever os valores de pixel da imagem resultante
-    for (int i = 0; i < width; i++) {
-        for (int j = 0; j < height; j++) {
+    for (int i = 0; i < linha -1 ; i++) {
+        for (int j = 0; j < coluna - 1; j++) {
             fprintf(output_file, "%d ", G[i][j]);
         }
         fprintf(output_file, "\n");
@@ -164,7 +164,7 @@ int main() {
     // Fechar o arquivo
     fclose(output_file);
     // Liberação de memória
-    for (int i = 0; i < height; i++) {
+    for (int i = 0; i < linha; i++) {
         free(image[i]);
         free(Gx[i]);
         free(Gy[i]);
@@ -175,5 +175,5 @@ int main() {
     free(Gy);
     free(G);
 
-    pthread_exit(NULL);
+    return 0;
 }
