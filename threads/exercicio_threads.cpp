@@ -76,12 +76,15 @@ int main() {
     char magic[3];
     char line[1024];
     int width, height, maxval;
+    //guarda a primeira info do arquivo: P2
     fscanf(file, "%s\n", magic);
+    //guarda o comentário
     fscanf(file, "%[^\n]\n",line);
+    //guarda linhas, colunas e intensidade
     fscanf(file, "%d %d %d", &width, &height, &maxval);
 
-    printf("%s", line);
-    printf("%s", magic);
+    printf("%s\n", magic);
+    printf("%s\n", line);
     printf("tam imagem: %d x %d \n", width, height);
 
     if (magic[0] != 'P' || magic[1] != '2') {
@@ -151,8 +154,8 @@ int main() {
     fprintf(output_file, "P2\n%d %d\n255\n", width, height);
 
     // Escrever os valores de pixel da imagem resultante
-    for (int i = 1; i < width - 1; i++) {
-        for (int j = 1; j < height - 1; j++) {
+    for (int i = 0; i < width; i++) {
+        for (int j = 0; j < height; j++) {
             fprintf(output_file, "%d ", G[i][j]);
         }
         fprintf(output_file, "\n");
