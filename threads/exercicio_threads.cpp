@@ -24,8 +24,7 @@ void *GdeX(void *arg) {
     for (int i = 1; i < height - 2; i++) {
         for (int j = 1; j < width - 2; j++) {
             // Cálculo de Gx
-            result[i][j] = (image[i + 1][j - 1] + image[i + 1][j] + image[i + 1][j + 1]) -
-                          (image[i - 1][j - 1] + image[i - 1][j] + image[i - 1][j + 1]);
+            result[i][j] = (image[i + 1][j - 1] + image[i + 1][j] + image[i + 1][j + 1]) - (image[i - 1][j - 1] + image[i - 1][j] + image[i - 1][j + 1]);
 
             // Saturando
             if (result[i][j] < 0) {
@@ -50,8 +49,7 @@ void *GdeY(void *arg) {
     for (int i = 1; i < height - 2; i++) {
         for (int j = 1; j < width - 2; j++) {
             // Cálculo de Gy
-            result[i][j] = (image[i - 1][j + 1] + image[i][j + 1] + image[i + 1][j + 1]) -
-                          (image[i - 1][j - 1] + image[i][j - 1] + image[i + 1][j - 1]);
+            result[i][j] = (image[i - 1][j + 1] + image[i][j + 1] + image[i + 1][j + 1]) - (image[i - 1][j - 1] + image[i][j - 1] + image[i + 1][j - 1]);
 
             // Saturando
             if (result[i][j] < 0) {
@@ -76,8 +74,15 @@ int main() {
 
     // Leitura do cabeçalho da imagem PGM
     char magic[3];
+    char line[1024];
     int width, height, maxval;
-    fscanf(file, "%s %d %d %d", magic, &width, &height, &maxval);
+    fscanf(file, "%s\n", magic);
+    fscanf(file, "%[^\n]\n",line);
+    fscanf(file, "%d %d %d", &width, &height, &maxval);
+
+    printf("%s", line);
+    printf("%s", magic);
+    printf("tam imagem: %d x %d \n", width, height);
 
     if (magic[0] != 'P' || magic[1] != '2') {
         printf("O arquivo não está no formato PGM P2.\n");
@@ -111,8 +116,9 @@ int main() {
 
     // Criação das threads para calcular Gx e Gy
     pthread_t thread_gx, thread_gy;
-    pthread_create(&thread_gx, NULL, GdeX, &gx_args);
-    pthread_create(&thread_gy, NULL, GdeY, &gy_args);
+    pthread_create(&thread_gx, NULL, GdeX, (void*) &gx_args);
+    pthread_create(&thread_gy, NULL, GdeY, (void*) &gy_args);
+
 
     // Aguarda o término das threads Gx e Gy
     pthread_join(thread_gx, NULL);
@@ -124,8 +130,8 @@ int main() {
         G[i] = (int*)malloc(width * sizeof(int));
     }
 
-    for (int i = 1; i < height - 1; i++) {
-        for (int j = 1; j < width - 1; j++) {
+    for (int i = 0; i < height - 1; i++) {
+        for (int j = 0; j < width - 1; j++) {
             G[i][j] = Gx[i][j] + Gy[i][j];
             if (G[i][j] > 255) {
                 G[i][j] = 255;
@@ -166,5 +172,5 @@ int main() {
     free(Gy);
     free(G);
 
-    return 0;
+    pthread_exit(NULL);
 }
